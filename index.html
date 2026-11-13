@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Finansial 50/30/20 - AR DEVELOPER</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0b0f19',
+                        cardBg: '#131c2e',
+                        accentGreen: '#10b981',
+                        accentBlue: '#3b82f6',
+                        accentPurple: '#8b5cf6'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-darkBg text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-slate-800 bg-cardBg/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-blue-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 font-bold text-lg text-white">
+                    50
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight text-white">Smart Budgeting 50/30/20</h1>
+                    <p class="text-xs text-slate-400">Atur Gaji & Dana Darurat Mudah</p>
+                </div>
+            </div>
+            <div class="text-xs font-medium px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/55 text-emerald-400">
+                By AR DEVELOPER
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 py-8 w-full flex-grow grid grid-cols-1 md:grid-cols-12 gap-8">
+        
+        <!-- Kolom Kiri: Input & Ringkasan -->
+        <div class="md:col-span-5 space-y-6">
+            <div class="bg-cardBg border border-slate-800/80 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <h2 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Masukkan Pendapatan
+                </h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Gaji Bersih Per Bulan (Rp)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm font-semibold">Rp</span>
+                            <input type="text" id="gajiInput" placeholder="Contoh: 5.000.000" oninput="formatRupiah(this); hitungBudget();"
+                                class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl py-3 pl-12 pr-4 text-white text-lg font-bold tracking-wide focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
+                        </div>
+                    </div>
+
+                    <button onclick="setSampleGaji()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700/80 border border-slate-700/5kn rounded-xl text-xs font-semibold text-slate-300 transition-all flex items-center justify-center gap-2">
+                        <span>✨ Coba Contoh Gaji (Rp 5.000.000)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Target Dana Darurat Card -->
+            <div class="bg-gradient-to-br from-cardBg to-slate-900 border border-slate-800/80 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-semibold text-slate-300">Target Dana Darurat (6x Kebutuhan)</h3>
+                    <span class="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-full font-medium">Safety Net</span>
+                </div>
+                <div id="danaDaruratVal" class="text-2xl font-extrabold text-white tracking-tight">Rp 0</div>
+                <p class="text-xs text-slate-400 mt-2">Dihitung dari 50% kebutuhan pokok × 6 bulan untuk mengamankan kondisi darurat.</p>
+            </div>
+        </div>
+
+        <!-- Kolom Kanan: Rincian Alokasi & Grafik -->
+        <div class="md:col-span-7 space-y-6">
+            <div class="bg-cardBg border border-slate-800/80 rounded-2xl p-6 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                
+                <!-- Grafik Donat -->
+                <div class="lg:col-span-5 flex justify-center">
+                    <div class="w-48 h-48 relative">
+                        <canvas id="budgetChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Rincian Nilai -->
+                <div class="lg:col-span-7 space-y-4">
+                    <h3 class="text-sm font-semibold text-slate-300 border-b border-slate-800 pb-2">Rincian Alokasi 50 / 30 / 20</h3>
+                    
+                    <!-- Kebutuhan Pokok -->
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <div class="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></div>
+                            <div>
+                                <div class="text-xs font-semibold text-white">50% Kebutuhan Pokok (Needs)</div>
+                                <div class="text-[11px] text-slate-400">Kost, makan, cicilan, tagihan</div>
+                            </div>
+                        </div>
+                        <div id="kebutuhanPokokVal" class="text-sm font-bold text-emerald-400">Rp 0</div>
+                    </div>
+
+                    <!-- Investasi / Tabungan -->
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <div class="w-3.5 h-3.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50"></div>
+                            <div>
+                                <div class="text-xs font-semibold text-white">30% Investasi & Tabungan (Savings)</div>
+                                <div class="text-[11px] text-slate-400">Set otomatis ke instrumen masa depan</div>
+                            </div>
+                        </div>
+                        <div id="investasiVal" class="text-sm font-bold text-blue-400">Rp 0</div>
+                    </div>
+
+                    <!-- Pengeluaran Suka-suka -->
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <div class="w-3.5 h-3.5 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50"></div>
+                            <div>
+                                <div class="text-xs font-semibold text-white">20% Pengeluaran Suka-suka (Wants)</div>
+                                <div class="text-[11px] text-slate-400">Hiburan, jajan, hobi, self-reward</div>
+                            </div>
+                        </div>
+                        <div id="sukaSukaVal" class="text-sm font-bold text-purple-400">Rp 0</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Tips Kotak -->
+            <div class="bg-cardBg border border-slate-800/80 rounded-2xl p-5 shadow-xl flex items-start gap-4">
+                <div class="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div class="text-xs text-slate-300 space-y-1">
+                    <span class="font-semibold text-white block">Tips Pengelolaan Finansial:</span>
+                    <p>Gunakan sistem **set otomatis** untuk porsi 30% investasi begitu gaji diterima agar kedisiplinan keuangan terjaga tanpa mudah terpakai untuk hal konsumtif.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Otomatis Tahun -->
+    <footer class="border-t border-slate-800/80 bg-cardBg/40 py-6 text-center text-xs text-slate-400">
+        <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>&copy; <span id="currentYear"></span> Kalkulator Keuangan 50/30/20. All rights reserved.</p>
+            <p class="font-medium text-emerald-400">Created by AR DEVELOPER</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logika & Chart -->
+    <script>
+        // Set tahun otomatis secara dinamis
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        let budgetChartInstance = null;
+
+        function formatRupiah(input) {
+            let value = input.value.replace(/[^,\d]/g, '').toString();
+            let split = value.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            input.value = rupiah;
+        }
+
+        function getRawNumber(valStr) {
+            if (!valStr) return 0;
+            return parseInt(valStr.replace(/\./g, ''), 10) || 0;
+        }
+
+        function formatCurrency(num) {
+            return 'Rp ' + num.toLocaleString('id-ID');
+        }
+
+        function setSampleGaji() {
+            document.getElementById('gajiInput').value = '5.000.000';
+            hitungBudget();
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            budgetChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Kebutuhan Pokok (50%)', 'Investasi (30%)', 'Suka-suka (20%)'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let value = context.raw || 0;
+                                    return ' ' + formatCurrency(value);
+                                }
+                            }
+                        }
+                    },
+                    cutout: '72%'
+                }
+            });
+        }
+
+        function hitungBudget() {
+            const rawGaji = getRawNumber(document.getElementById('gajiInput').value);
+
+            const kebutuhanPokok = rawGaji * 0.50;
+            const investasi = rawGaji * 0.30;
+            const sukaSuka = rawGaji * 0.20;
+            const danaDarurat = kebutuhanPokok * 6;
+
+            // Update Text UI
+            document.getElementById('kebutuhanPokokVal').textContent = formatCurrency(kebutuhanPokok);
+            document.getElementById('investasiVal').textContent = formatCurrency(investasi);
+            document.getElementById('sukaSukaVal').textContent = formatCurrency(sukaSuka);
+            document.getElementById('danaDaruratVal').textContent = formatCurrency(danaDarurat);
+
+            // Update Chart Data
+            if (budgetChartInstance) {
+                budgetChartInstance.data.datasets[0].data = [kebutuhanPokok, investasi, sukaSuka];
+                budgetChartInstance.update();
+            }
+        }
+
+        // Inisialisasi awal chart saat halaman dimuat
+        window.onload = function() {
+            initChart();
+            setSampleGaji(); // Auto load contoh default Rp 5.000.000
+        };
+    </script>
+</body>
+</html>
